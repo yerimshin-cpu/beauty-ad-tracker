@@ -1,20 +1,476 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Indonesia Beauty Ad Tracker</title><style>
-:root{font-family:Inter,Arial,'Malgun Gothic',sans-serif;color:#182338;background:#f6f8fc}*{box-sizing:border-box}body{margin:0}main{max-width:1250px;margin:auto;padding:32px 20px}h1{margin:0;font-size:28px}p{color:#627087}header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.pill{background:#e5f3ed;color:#146c43;border-radius:30px;padding:7px 12px;font-size:12px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}.stat,.panel,.ad{background:white;border:1px solid #e4e9f1;border-radius:15px}.stat{padding:18px}.stat strong{display:block;font-size:27px;margin-bottom:7px}.stat span{color:#69768c;font-size:12px}.panel{padding:18px;margin:16px 0}.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.control{display:flex;flex-direction:column;gap:7px;min-width:140px;flex:1}.control label{font-size:12px;font-weight:700;color:#58677e}select,input,button{padding:11px 12px;border:1px solid #dce3ee;border-radius:9px;background:white;font-size:14px}button{cursor:pointer;background:#293c74;color:white;border:0;font-weight:600}button.secondary{background:#e9edf6;color:#253456}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:20px}.ad{overflow:hidden}.visual{height:220px;background:#edf0f6;display:flex;align-items:center;justify-content:center;color:#79859a;position:relative}.visual img{width:100%;height:100%;object-fit:cover}.tag{font-size:11px;background:#edf2fb;border-radius:30px;padding:5px 9px;display:inline-block;margin:3px 4px 3px 0}.content{padding:16px}.content h3{margin:0 0 8px;font-size:16px}.body{font-size:13px;line-height:1.55;color:#4b5a70;white-space:pre-wrap;max-height:95px;overflow:auto}.meta{font-size:12px;color:#66768d;margin:9px 0}a{color:#2447a2;text-decoration:none;font-size:13px;font-weight:600}.muted{font-size:12px;color:#7b8698}.warn{background:#fff9e9;border:1px solid #f3e1b3;border-radius:10px;padding:12px;color:#735b1c;font-size:13px}.insight{display:flex;flex-wrap:wrap;gap:8px}.insight span{background:#eff3fa;border-radius:9px;padding:10px;font-size:13px}.hidden{display:none}@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:550px){.grid{grid-template-columns:1fr}}
-</style></head><body><main><header><div><h1>Indonesia Beauty Ad Tracker</h1><p>Meta Ad Library · 광고 소재 및 소구점 모니터링</p></div><span class="pill">Apify 데이터 연결 · 수동 업데이트</span></header>
-<div class="stats"><div class="stat"><strong id="total">0</strong><span>모니터링 대상 광고</span></div><div class="stat"><strong id="brandCount">0</strong><span>확인된 브랜드</span></div><div class="stat"><strong id="longCount">0</strong><span>장기 게재 (30일+)</span></div><div class="stat"><strong id="excluded">0</strong><span>제외된 기타 광고</span></div></div>
-<div class="warn">2026-11-13 수집된 샘플 데이터야. 이미지·영상 URL은 Meta에서 만료될 수 있어. 게재 시작일부터의 경과일은 광고 효율을 증명하지 않으며, 데이터의 활성 상태는 수집 당시 기준이야. 자동 갱신은 아직 연결되지 않았어.</div>
-<section class="panel"><div class="controls"><div class="control"><label>브랜드</label><select id="brand"><option value="all">전체</option><option value="SKIN1004">SKIN1004</option><option value="Skintific">Skintific</option><option value="Glad2Glow">Glad2Glow</option><option value="LANEIGE">LANEIGE</option><option value="COSRX">COSRX</option><option value="Wardah">Wardah</option><option value="Garnier">Garnier</option></select></div><div class="control"><label>소재 유형</label><select id="format"><option value="all">전체</option><option value="VIDEO">영상</option><option value="CAROUSEL">캐러셀</option><option value="IMAGE">이미지</option></select></div><div class="control"><label>장기 게재</label><select id="duration"><option value="0">전체 기간</option><option value="30">30일 이상</option><option value="60">60일 이상</option><option value="90">90일 이상</option></select></div><div class="control"><label>검색</label><input id="search" placeholder="광고 문구 검색"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px"><label for="upload" style="background:#293c74;color:white;padding:11px;border-radius:9px;cursor:pointer;font-size:13px">새 Apify JSON 불러오기</label><input id="upload" type="file" accept=".json,application/json" style="display:none"><button class="secondary" id="reset">최신 데이터 다시 불러오기</button><span class="muted" id="source"></span></div></section>
-<section class="panel"><h3>광고 카피 기반 소구점 분석</h3><p class="muted">키워드 규칙으로 자동 분류한 참고용 결과야. 실제 이미지 내용까지 AI가 판독한 결과는 아니야.</p><div id="insights" class="insight"></div></section>
-<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:19px">광고 소재 <span id="visibleCount"></span></h2><span class="muted">이미지 클릭 시 원본 광고 라이브러리로 이동</span></div><div id="cards" class="grid"></div></main>
-<script id="seed" type="application/json">[]</script><script>
-const initial=JSON.parse(document.getElementById('seed').textContent);let records=initial;const $=id=>document.getElementById(id);const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function brand(r){let n=(r.pageName||'').toLowerCase();if(n.includes('skin1004'))return 'SKIN1004';if(n.includes('skintific'))return 'Skintific';if(n.includes('glad2glow')||n.includes('glad 2 glow'))return 'Glad2Glow';if(n.includes('laneige'))return 'LANEIGE';if(n.includes('cosrx'))return 'COSRX';if(n.includes('wardah'))return 'Wardah';if(n.includes('garnier'))return 'Garnier';return null}
-function media(r){let candidates=[...(r.images||[]),...(r.videos||[]),...(r.cards||[])];for(const c of candidates){if(typeof c==='string'&&c.startsWith('http'))return c;for(const k of ['resizedImageUrl','originalImageUrl','videoPreviewImageUrl','thumbnailUrl','url'])if(c&&typeof c[k]==='string'&&c[k].startsWith('http'))return c[k]}return ''}
-function days(r){let a=Date.parse(r.startDate),b=Date.parse(r.scrapedAt)||Date.now();return isNaN(a)?null:Math.max(0,Math.floor((b-a)/86400000))}
-function categories(r){let s=[r.body,r.title,...(r.cards||[]).map(x=>x.title||'')].join(' ').toLowerCase();let rules={'가격·할인':/diskon|discount|promo|sale|gratis|free|hemat|voucher|rp\s?\d|%|murah/,'성분·효능':/spf|niacin|centella|vitamin|ceramide|skin barrier|bright|glow|pore|acne|jerawat|hydrati|moistur|kulit|sunscreen|por[e]?less/,'후기·UGC':/my |aku |favorit|review|honest|routine|cocok|pakai|hasil|love|recommended/,'전후 비교':/before|after|sebelum|sesudah|dalam 30 detik/,'K-Beauty':/korea|k-beauty|korean|made in korea/};let out=Object.entries(rules).filter(([k,v])=>v.test(s)).map(([k])=>k);return out.length?out:['기타·미분류']}
-function render(){let valid=records.filter(r=>brand(r));let excluded=records.length-valid.length;let b=$('brand').value,f=$('format').value,d=+$('duration').value,q=$('search').value.toLowerCase();let view=valid.filter(r=>(b==='all'||brand(r)===b)&&(f==='all'||(r.displayFormat||'').toUpperCase()===f)&&(!d||(days(r)!=null&&days(r)>=d))&&(!q||[r.body,r.title,r.pageName].join(' ').toLowerCase().includes(q)));
-$('total').textContent=valid.length;$('brandCount').textContent=new Set(valid.map(brand)).size;$('longCount').textContent=valid.filter(r=>days(r)>=30).length;$('excluded').textContent=excluded;$('visibleCount').textContent=`(${view.length})`;
-let count={};view.forEach(r=>categories(r).forEach(x=>count[x]=(count[x]||0)+1));$('insights').innerHTML=Object.entries(count).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<span>${escape(k)} · ${n}개</span>`).join('')||'<span>해당 광고 없음</span>';
-$('cards').innerHTML=view.map(r=>{let pic=media(r),link=r.url||'#',tag=categories(r),n=days(r),format=r.displayFormat||'UNKNOWN';return `<article class="ad"><a href="${escape(link)}" target="_blank" rel="noopener noreferrer"><div class="visual">${pic?`<img loading="lazy" src="${escape(pic)}" alt="광고 소재" onerror="this.style.display='none';this.parentNode.append('이미지 만료 또는 표시 불가')">`:'미디어 미제공'}</div></a><div class="content"><h3>${escape(r.pageName||'광고주 미상')}</h3><div>${tag.map(x=>`<span class="tag">${escape(x)}</span>`).join('')}</div><div class="meta">${escape(format)} · ${escape((r.publisherPlatforms||[]).join(', '))}<br>시작 ${escape((r.startDate||'').slice(0,10))} · ${n==null?'기간 미상':n+'일 경과'} · ${(r.cards||[]).length}개 카드</div><div class="body">${escape(r.body||'광고 문구 없음')}</div><p><a href="${escape(link)}" target="_blank" rel="noopener noreferrer">Meta 광고 원본 보기 ↗</a></p></div></article>`}).join('')||'<p>조건에 맞는 광고가 없어.</p>'}
-['brand','format','duration','search'].forEach(x=>$(x).addEventListener(x==='search'?'input':'change',render));$('reset').onclick=()=>location.reload();$('upload').onchange=async e=>{let file=e.target.files[0];if(!file)return;try{let v=JSON.parse(await file.text());if(!Array.isArray(v))v=v.items||v.data||[];if(!Array.isArray(v))throw Error('배열 형식이 아니야');records=v;$('source').textContent=file.name+' · '+v.length+'건';render()}catch(err){alert('JSON 파일을 읽을 수 없어: '+err.message)}};$('source').textContent='데이터 로딩 중';render();fetch('./data.json?t='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(v=>{records=Array.isArray(v)?v:(v.items||[]);$('source').textContent='자동 수집 데이터 · '+records.length+'건';render()}).catch(e=>{$('source').textContent='데이터를 읽지 못했어: '+e.message;render()});
-</script></body></html>
+
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Indonesia Beauty Ad Tracker</title>
+<style>
+:root {
+  font-family: Inter, Arial, 'Malgun Gothic', sans-serif;
+  color: #182338;
+  background: #f6f8fc;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 1250px; margin: auto; padding: 32px 20px; }
+h1 { margin: 0; font-size: 28px; }
+p { color: #627087; }
+header {
+  display: flex; justify-content: space-between;
+  align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.pill {
+  background: #e5f3ed; color: #146c43;
+  border-radius: 30px; padding: 7px 12px; font-size: 12px;
+}
+.stats {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 12px; margin: 24px 0;
+}
+.stat,.panel,.ad {
+  background: white; border: 1px solid #e4e9f1;
+  border-radius: 15px;
+}
+.stat { padding: 18px; }
+.stat strong { display: block; font-size: 27px; margin-bottom: 7px; }
+.stat span { color: #69768c; font-size: 12px; }
+.panel { padding: 18px; margin: 16px 0; }
+.controls {
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: end;
+}
+.control {
+  display: flex; flex-direction: column; gap: 7px;
+  min-width: 140px; flex: 1;
+}
+.control label {
+  font-size: 12px; font-weight: 700; color: #58677e;
+}
+select,input,button {
+  padding: 11px 12px; border: 1px solid #dce3ee;
+  border-radius: 9px; background: white; font-size: 14px;
+}
+button {
+  cursor: pointer; background: #293c74;
+  color: white; border: 0; font-weight: 600;
+}
+button.secondary { background: #e9edf6; color: #253456; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 16px; margin-top: 20px;
+}
+.ad { overflow: hidden; }
+.visual {
+  height: 240px; background: #edf0f6;
+  display: flex; align-items: center; justify-content: center;
+  color: #79859a; position: relative;
+  overflow: hidden; text-align: center; font-size: 13px;
+}
+.visual img,.visual video {
+  width: 100%; height: 100%; object-fit: contain;
+}
+.visual a { display: block; width: 100%; height: 100%; }
+.media-fallback { padding: 20px; }
+.tag {
+  font-size: 11px; background: #edf2fb;
+  border-radius: 30px; padding: 5px 9px;
+  display: inline-block; margin: 3px 4px 3px 0;
+}
+.content { padding: 16px; }
+.content h3 { margin: 0 0 8px; font-size: 16px; }
+.body {
+  font-size: 13px; line-height: 1.55; color: #4b5a70;
+  white-space: pre-wrap; max-height: 95px; overflow: auto;
+}
+.meta { font-size: 12px; color: #66768d; margin: 9px 0; }
+a { color: #2447a2; text-decoration: none; font-size: 13px; font-weight: 600; }
+.muted { font-size: 12px; color: #7b8698; }
+.warn {
+  background: #fff9e9; border: 1px solid #f3e1b3;
+  border-radius: 10px; padding: 12px;
+  color: #735b1c; font-size: 13px;
+}
+.insight { display: flex; flex-wrap: wrap; gap: 8px; }
+.insight span {
+  background: #eff3fa; border-radius: 9px;
+  padding: 10px; font-size: 13px;
+}
+@media(max-width:850px) {
+  .grid { grid-template-columns: repeat(2,1fr); }
+  .stats { grid-template-columns: repeat(2,1fr); }
+}
+@media(max-width:550px) {
+  .grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div>
+    <h1>Indonesia Beauty Ad Tracker</h1>
+    <p>Meta Ad Library · 광고 소재 및 소구점 모니터링</p>
+  </div>
+  <span class="pill">● 자동 수집 연결 · 월/수 오전 10시 KST</span>
+</header>
+
+<div class="stats">
+  <div class="stat"><strong id="total">0</strong><span>모니터링 대상 광고</span></div>
+  <div class="stat"><strong id="brandCount">0</strong><span>확인된 브랜드</span></div>
+  <div class="stat"><strong id="longCount">0</strong><span>장기 게재 (30일+)</span></div>
+  <div class="stat"><strong id="excluded">0</strong><span>제외된 기타 광고</span></div>
+</div>
+
+<div class="warn">
+  GitHub Actions가 매주 월요일·수요일 오전 10시(KST)에
+  Apify 광고 수집을 예약 실행해.
+  실제 실행은 지연되거나 실패할 수 있어.
+  이미지·영상 URL은 Meta에서 만료되거나 외부 재생이 제한될 수 있어.
+  장기 게재는 광고 효율을 증명하지 않으며,
+  활성 상태는 마지막 수집 당시 기준이야.
+</div>
+
+<section class="panel">
+  <div class="controls">
+    <div class="control">
+      <label>브랜드</label>
+      <select id="brand">
+        <option value="all">전체</option>
+        <option value="SKIN1004">SKIN1004</option>
+        <option value="Skintific">Skintific</option>
+        <option value="Glad2Glow">Glad2Glow</option>
+        <option value="LANEIGE">LANEIGE</option>
+        <option value="COSRX">COSRX</option>
+        <option value="Wardah">Wardah</option>
+        <option value="Garnier">Garnier</option>
+      </select>
+    </div>
+    <div class="control">
+      <label>소재 유형</label>
+      <select id="format">
+        <option value="all">전체</option>
+        <option value="VIDEO">영상</option>
+        <option value="CAROUSEL">캐러셀</option>
+        <option value="IMAGE">이미지</option>
+      </select>
+    </div>
+    <div class="control">
+      <label>장기 게재</label>
+      <select id="duration">
+        <option value="0">전체 기간</option>
+        <option value="30">30일 이상</option>
+        <option value="60">60일 이상</option>
+        <option value="90">90일 이상</option>
+      </select>
+    </div>
+    <div class="control">
+      <label>검색</label>
+      <input id="search" placeholder="광고 문구 검색">
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px">
+    <label for="upload" style="background:#293c74;color:white;padding:11px;border-radius:9px;cursor:pointer;font-size:13px">
+      새 Apify JSON 불러오기
+    </label>
+    <input id="upload" type="file" accept=".json,application/json" style="display:none">
+    <button class="secondary" id="reset">최신 데이터 다시 불러오기</button>
+    <span class="muted" id="source"></span>
+  </div>
+</section>
+
+<section class="panel">
+  <h3>광고 카피 기반 소구점 분석</h3>
+  <p class="muted">
+    키워드 규칙으로 자동 분류한 참고용 결과야.
+    이미지·영상 내용을 AI가 직접 분석한 결과는 아니야.
+  </p>
+  <div id="insights" class="insight"></div>
+</section>
+
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+  <h2 style="font-size:19px">광고 소재 <span id="visibleCount"></span></h2>
+  <span class="muted">이미지는 클릭 시 원본 이동 · 영상은 재생 버튼 사용</span>
+</div>
+<div id="cards" class="grid"></div>
+</main>
+
+<script>
+let records = [];
+const $ = id => document.getElementById(id);
+
+const escape = s => String(s ?? '').replace(
+  /[&<>"']/g,
+  c => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[c])
+);
+
+function safeUrl(value) {
+  if(typeof value !== 'string') return '';
+  try {
+    const u = new URL(value);
+    return ['https:', 'http:'].includes(u.protocol) ? u.href : '';
+  } catch {
+    return '';
+  }
+}
+
+function brand(r) {
+  const n = (r.pageName || '').toLowerCase();
+  if(n.includes('skin1004')) return 'SKIN1004';
+  if(n.includes('skintific')) return 'Skintific';
+  if(n.includes('glad2glow') || n.includes('glad 2 glow')) return 'Glad2Glow';
+  if(n.includes('laneige')) return 'LANEIGE';
+  if(n.includes('cosrx')) return 'COSRX';
+  if(n.includes('wardah')) return 'Wardah';
+  if(n.includes('garnier')) return 'Garnier';
+  return null;
+}
+
+function media(r) {
+  const imageFields = [
+    'resizedImageUrl',
+    'originalImageUrl',
+    'imageUrl',
+    'thumbnailUrl',
+    'url'
+  ];
+  const posterFields = [
+    'videoPreviewImageUrl',
+    'thumbnailUrl',
+    'posterUrl',
+    'imageUrl'
+  ];
+
+  for(const item of r.images || []) {
+    if(typeof item === 'string' && safeUrl(item)) {
+      return {type:'image', url:safeUrl(item)};
+    }
+    if(item && typeof item === 'object') {
+      for(const key of imageFields) {
+        if(safeUrl(item[key])) {
+          return {type:'image', url:safeUrl(item[key])};
+        }
+      }
+    }
+  }
+
+  for(const item of r.videos || []) {
+    if(!item) continue;
+
+    if(typeof item === 'string' && safeUrl(item)) {
+      return {type:'video', url:safeUrl(item), poster:''};
+    }
+
+    if(typeof item !== 'object') continue;
+
+    const poster = posterFields
+      .map(key => safeUrl(item[key]))
+      .find(Boolean) || '';
+
+    const videoUrl = [
+      item.hdUrl,
+      item.sdUrl,
+      item.videoUrl,
+      item.videoHdUrl,
+      item.videoSdUrl
+    ].map(safeUrl).find(Boolean);
+
+    if(videoUrl) {
+      return {type:'video', url:videoUrl, poster};
+    }
+    if(poster) {
+      return {type:'image', url:poster};
+    }
+  }
+
+  for(const item of r.cards || []) {
+    if(!item || typeof item !== 'object') continue;
+    for(const key of imageFields) {
+      if(safeUrl(item[key])) {
+        return {type:'image', url:safeUrl(item[key])};
+      }
+    }
+  }
+
+  return null;
+}
+
+function days(r) {
+  const a = Date.parse(r.startDate);
+  const b = Date.parse(r.scrapedAt) || Date.now();
+  return isNaN(a)
+    ? null
+    : Math.max(0, Math.floor((b-a)/86400000));
+}
+
+function categories(r) {
+  const s = [
+    r.body,
+    r.title,
+    ...(r.cards || []).map(x => x.title || '')
+  ].join(' ').toLowerCase();
+
+  const rules = {
+    '가격·할인': /diskon|discount|promo|sale|gratis|free|hemat|voucher|rp\s?\d|%|murah/,
+    '성분·효능': /spf|niacin|centella|vitamin|ceramide|skin barrier|bright|glow|pore|acne|jerawat|hydrati|moistur|kulit|sunscreen|por[e]?less/,
+    '후기·UGC': /my |aku |favorit|review|honest|routine|cocok|pakai|hasil|love|recommended/,
+    '전후 비교': /before|after|sebelum|sesudah|dalam 30 detik/,
+    'K-Beauty': /korea|k-beauty|korean|made in korea/
+  };
+
+  const out = Object.entries(rules)
+    .filter(([key,regex]) => regex.test(s))
+    .map(([key]) => key);
+
+  return out.length ? out : ['기타·미분류'];
+}
+
+function visualHtml(r) {
+  const m = media(r);
+  const link = safeUrl(r.url) || '#';
+
+  if(!m) {
+    return '<div class="visual"><span class="media-fallback">미디어 미제공</span></div>';
+  }
+
+  if(m.type === 'video') {
+    const poster = m.poster ? `poster="${escape(m.poster)}"` : '';
+    return `
+      <div class="visual">
+        <video controls muted playsinline preload="metadata"
+          ${poster}
+          src="${escape(m.url)}">
+          이 브라우저에서는 영상을 재생할 수 없어.
+        </video>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="visual">
+      <a href="${escape(link)}" target="_blank" rel="noopener noreferrer">
+        <img loading="lazy"
+          src="${escape(m.url)}"
+          alt="광고 소재"
+          onerror="this.style.display='none';this.parentNode.append('이미지 만료 또는 표시 불가')">
+      </a>
+    </div>
+  `;
+}
+
+function render() {
+  const valid = records.filter(r => brand(r));
+  const excluded = records.length - valid.length;
+
+  const b = $('brand').value;
+  const f = $('format').value;
+  const d = +$('duration').value;
+  const q = $('search').value.toLowerCase();
+
+  const view = valid.filter(r =>
+    (b === 'all' || brand(r) === b) &&
+    (f === 'all' || (r.displayFormat || '').toUpperCase() === f) &&
+    (!d || (days(r) != null && days(r) >= d)) &&
+    (!q || [r.body,r.title,r.pageName].join(' ').toLowerCase().includes(q))
+  );
+
+  $('total').textContent = valid.length;
+  $('brandCount').textContent = new Set(valid.map(brand)).size;
+  $('longCount').textContent = valid.filter(r => days(r) >= 30).length;
+  $('excluded').textContent = excluded;
+  $('visibleCount').textContent = `(${view.length})`;
+
+  const count = {};
+  view.forEach(r =>
+    categories(r).forEach(x => count[x] = (count[x] || 0) + 1)
+  );
+
+  $('insights').innerHTML =
+    Object.entries(count)
+      .sort((a,b) => b[1]-a[1])
+      .map(([k,n]) => `<span>${escape(k)} · ${n}개</span>`)
+      .join('') || '<span>해당 광고 없음</span>';
+
+  $('cards').innerHTML = view.map(r => {
+    const link = safeUrl(r.url) || '#';
+    const tags = categories(r);
+    const n = days(r);
+    const format = r.displayFormat || 'UNKNOWN';
+
+    return `
+      <article class="ad">
+        ${visualHtml(r)}
+        <div class="content">
+          <h3>${escape(r.pageName || '광고주 미상')}</h3>
+          <div>
+            ${tags.map(x => `<span class="tag">${escape(x)}</span>`).join('')}
+          </div>
+          <div class="meta">
+            ${escape(format)} · ${escape((r.publisherPlatforms || []).join(', '))}
+            <br>
+            시작 ${escape((r.startDate || '').slice(0,10))}
+            · ${n == null ? '기간 미상' : n+'일 경과'}
+            · ${(r.cards || []).length}개 카드
+          </div>
+          <div class="body">${escape(r.body || '광고 문구 없음')}</div>
+          <p>
+            <a href="${escape(link)}" target="_blank" rel="noopener noreferrer">
+              Meta 광고 원본 보기 ↗
+            </a>
+          </p>
+        </div>
+      </article>
+    `;
+  }).join('') || '<p>조건에 맞는 광고가 없어.</p>';
+}
+
+['brand','format','duration','search'].forEach(id => {
+  $(id).addEventListener(id === 'search' ? 'input' : 'change', render);
+});
+
+$('reset').onclick = () => location.reload();
+
+$('upload').onchange = async e => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  try {
+    let v = JSON.parse(await file.text());
+    if(!Array.isArray(v)) v = v.items || v.data || [];
+    if(!Array.isArray(v)) throw Error('배열 형식이 아니야');
+
+    records = v;
+    $('source').textContent = file.name + ' · ' + v.length + '건';
+    render();
+  } catch(err) {
+    alert('JSON 파일을 읽을 수 없어: ' + err.message);
+  }
+};
+
+$('source').textContent = '데이터 로딩 중';
+render();
+
+fetch('./data.json?t=' + Date.now(), {cache:'no-store'})
+  .then(response => {
+    if(!response.ok) throw Error('HTTP ' + response.status);
+    return response.json();
+  })
+  .then(v => {
+    records = Array.isArray(v) ? v : (v.items || []);
+    $('source').textContent =
+      '자동 수집 데이터 · ' + records.length + '건 · 현재 로드 완료';
+    render();
+  })
+  .catch(err => {
+    $('source').textContent = '데이터를 읽지 못했어: ' + err.message;
+    render();
+  });
+</script>
+</body>
+</html>
