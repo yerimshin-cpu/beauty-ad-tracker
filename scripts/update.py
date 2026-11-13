@@ -8,7 +8,10 @@ PAYLOAD = {'activeStatus':'active','adType':'all','country':'ID','exactPhrase':F
 def api(path, data=None):
     req = urllib.request.Request('https://api.apify.com/v2/'+path, data=None if data is None else json.dumps(data).encode(), headers={'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'}, method='POST' if data is not None else 'GET')
     with urllib.request.urlopen(req, timeout=90) as res: return json.load(res)
-run = api(f'acts/{ACTOR}/runs', PAYLOAD)['data']
+run = api(
+    f'acts/{ACTOR}/runs?maxTotalChargeUsd=0.50',
+    PAYLOAD
+)['data']
 run_id = run['id']
 for i in range(60):
     state = api(f'actor-runs/{run_id}')['data']
