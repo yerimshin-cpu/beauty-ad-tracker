@@ -4,7 +4,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 TOKEN = os.environ['APIFY_TOKEN']
 ACTOR = os.environ.get('APIFY_ACTOR_ID', 'juh6OwzcsI0sdSFsn')
 SEARCH = ['SKIN1004_Indonesia', 'Skintific Indonesia', 'Glad2Glow Indonesia', 'LANEIGE Indonesia', 'COSRX Indonesia', 'Wardah Indonesia', 'Garnier Indonesia']
-PAYLOAD = {'activeStatus':'active','adType':'all','country':'ID','exactPhrase':False,'includeAdDetails':False,'maxAds':30,'platforms':['facebook','instagram'],'proxyConfiguration':{'useApifyProxy':True,'apifyProxyGroups':['RESIDENTIAL']},'searchTerms':SEARCH,'mediaType':'all','sortBy':'default'}
+PAYLOAD = {'activeStatus':'active','adType':'all','country':'ID','exactPhrase':False,'includeAdDetails':False,'maxAds':5,'platforms':['facebook','instagram'],'proxyConfiguration':{'useApifyProxy':True,'apifyProxyGroups':['RESIDENTIAL']},'searchTerms':SEARCH,'mediaType':'all','sortBy':'default'}
 def api(path, data=None):
     req = urllib.request.Request('https://api.apify.com/v2/'+path, data=None if data is None else json.dumps(data).encode(), headers={'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'}, method='POST' if data is not None else 'GET')
     with urllib.request.urlopen(req, timeout=90) as res: return json.load(res)
